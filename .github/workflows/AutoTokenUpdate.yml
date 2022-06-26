@@ -1,0 +1,44 @@
+name: Update App Token
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  push:
+    tags:
+      - "v*"
+  schedule:
+    - cron: "4 * * * *"
+  watch:
+    types: [started]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install requests 
+      run: |
+        pip install requests
+    - name: Read config from secrets
+      env:
+        CONFIG_ID: ${{ secrets.CONFIG_ID }}
+        CONFIG_KEY: ${{ secrets.CONFIG_KEY }}
+      run: |
+        python update.py
+    - name: Commit
+      run: |
+        git config --global user.email ciro.santilli@gmail.com
+        git config --global user.name "cirosantilli"
+        git add .
+        git commit -m "update new app token" -a
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
